@@ -1,5 +1,7 @@
 import "./style.css";
 
+type Point = {x: number, y: number};
+
 const APP_NAME = "Canvas Draw";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -14,6 +16,8 @@ const clearButton = document.getElementById("clear");
 
 
 let drawing = false;
+let strokes: Point[][] = [];
+let CurrentStroke: Point[] = [];
 
 function setCanvasBG(){
     if(ctx){
@@ -23,24 +27,53 @@ function setCanvasBG(){
     
 };
 
-function startDrawing(event: MouseEvent){
-    drawing = true;
+function redraw(){
     if(ctx){
-        ctx.beginPath();
-        ctx.moveTo(event.offsetX, event.offsetY);
+        ctx.clearRect(0, 0, Canvas.width, Canvas.height);
+        setCanvasBG();
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+        for(const stroke of strokes){
+            if(stroke.length > 0){
+                ctx.beginPath();
+                ctx.moveTo(stroke[0].x, stroke[0].y);
+                for(const point of stroke){
+                    ctx.lineTo(point.x, point.y);
+                }
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
     }
 }
 
+function drawingChange(){
+    const event = new Event("drawing-changed");
+    Canvas.dispatchEvent(event);
+}
+
+function startDrawing(event: MouseEvent){
+    drawing = true;
+    CurrentStroke = [];
+    const point: Point = {x: event.offsetX, y: event.offsetY};
+    CurrentStroke.push(point); 
+}
+
 function draw(event: MouseEvent){
-    if(!ctx || !drawing) return;
-    ctx.lineTo(event.offsetX, event.offsetY);
-    ctx.stroke();
+    if(!drawing) return;
+    const point: Point = {x: event.offsetX, y: event.offsetY};
+    CurrentStroke.push(point);
+
+    drawingChange();
 }
 
 function stopDrawing(){
-    drawing = false;
-    if(ctx)
-        ctx.closePath();
+    if(drawing){
+        strokes.push(CurrentStroke);
+        drawing = false;
+    }
 }
 
 Canvas.addEventListener("mousedown", startDrawing);
@@ -48,7 +81,10 @@ Canvas.addEventListener("mousemove", draw);
 Canvas.addEventListener("mouseup", stopDrawing);
 Canvas.addEventListener("mouseout", stopDrawing);
 
+Canvas.addEventListener("drawing-changed", redraw);
+
 clearButton?.addEventListener("click", ()=>{
+    strokes = [];
     if(ctx){
         ctx.clearRect(0, 0, Canvas.width, Canvas.height);
         setCanvasBG();
