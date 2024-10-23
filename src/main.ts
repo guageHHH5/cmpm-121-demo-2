@@ -12,12 +12,15 @@ app.append(Header);
 const Canvas = document.getElementById ("myCanvas") as HTMLCanvasElement;
 const ctx = Canvas.getContext("2d");
 const clearButton = document.getElementById("clear");
+const undoButton = document.getElementById("undo");
+const redoButton = document.getElementById("redo");
 
 
 
 let drawing = false;
 let strokes: Point[][] = [];
 let CurrentStroke: Point[] = [];
+let redoStack: Point[][] = [];
 
 function setCanvasBG(){
     if(ctx){
@@ -76,12 +79,35 @@ function stopDrawing(){
     }
 }
 
+function UndoStroke(){
+    if(strokes.length > 0){
+        const lastStroke = strokes.pop();
+        if(lastStroke){
+            redoStack.push(lastStroke);
+        }
+        drawingChange();
+    }
+}
+
+function RedoStroke(){
+    if(redoStack.length > 0){
+        const lastUndo = redoStack.pop();
+        if(lastUndo){
+            strokes.push(lastUndo);
+        }
+        drawingChange();
+    }
+}
+
 Canvas.addEventListener("mousedown", startDrawing);
 Canvas.addEventListener("mousemove", draw);
 Canvas.addEventListener("mouseup", stopDrawing);
 Canvas.addEventListener("mouseout", stopDrawing);
 
 Canvas.addEventListener("drawing-changed", redraw);
+
+undoButton?.addEventListener('click', UndoStroke);
+redoButton?.addEventListener('click', RedoStroke);
 
 clearButton?.addEventListener("click", ()=>{
     strokes = [];
