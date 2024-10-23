@@ -30,6 +30,10 @@ body {
   min-height: 100vh;
 }
 
+canvas {
+  border: 2px solid #000;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
