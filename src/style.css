@@ -79,6 +79,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
+.tool-button.selectedTool{
+  background-color: #007BFF;
+  color: white;
+}
 button:hover {
   border-color: #646cff;
 }
