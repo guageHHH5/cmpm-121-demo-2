@@ -1,6 +1,5 @@
 import "./style.css";
 
-type Point = {x: number, y: number};
 
 
 
@@ -25,6 +24,7 @@ let strokes: MarkerLine[] = [];
 let CurrentStroke: MarkerLine | null = null;
 let redoStack: MarkerLine[] = [];
 let lineThickness = 2;
+let toolPrev: ToolPreview | null = null;
 
 class MarkerLine{
     private points: {x: number, y: number }[] = [];
@@ -52,6 +52,32 @@ class MarkerLine{
         ctx.closePath();
     }
 }
+
+class ToolPreview{
+    private x: number;
+    private y: number;
+    private thickness: number;
+
+    constructor(x: number, y: number, thickness: number){
+        this.x = x;
+        this.y = y;
+        this.thickness = thickness;
+    }
+
+    move(x: number, y: number){
+        this.x = x;
+        this.y = y;
+    }
+
+    draw(ctx: CanvasRenderingContext2D){
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.thickness / 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
 function setCanvasBG(){
     if(ctx){
         ctx.fillStyle = "#ffffff";
@@ -79,6 +105,11 @@ function drawingChange(){
     Canvas.dispatchEvent(event);
 }
 
+function toolMoved(){
+    const event = new Event('tool-moved');
+    Canvas.dispatchEvent(event);
+}
+
 function startDrawing(event: MouseEvent){
     drawing = true;
     CurrentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness);
@@ -97,6 +128,15 @@ function stopDrawing(){
         CurrentStroke = null;
         drawing = false;
     }
+}
+
+function updateToolPrev(event: MouseEvent){
+    if(!toolPrev){
+        toolPrev = new ToolPreview(event.offsetX, event.offsetY, lineThickness);
+    } else {
+        toolPrev.move(event.offsetX, event.offsetY);
+    }
+    toolMoved();
 }
 
 function UndoStroke(){
@@ -132,9 +172,15 @@ function selectThick(){
 }
 
 Canvas.addEventListener("mousedown", startDrawing);
-Canvas.addEventListener("mousemove", draw);
+Canvas.addEventListener("mousemove", (event) => {
+    draw(event);
+    updateToolPrev(event);
+});
 Canvas.addEventListener("mouseup", stopDrawing);
-Canvas.addEventListener("mouseout", stopDrawing);
+Canvas.addEventListener("mouseout", ()=>{
+    toolPrev = null;
+    drawingChange();
+});
 
 Canvas.addEventListener("drawing-changed", redraw);
 
