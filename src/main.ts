@@ -97,6 +97,14 @@ function redraw(){
         for(const stroke of strokes){
             stroke.display(ctx);
         }
+
+        if(CurrentStroke){
+            CurrentStroke.display(ctx);
+        }
+
+        if(toolPrev && !drawing){
+            toolPrev.draw(ctx);
+        }
     }
 }
 
