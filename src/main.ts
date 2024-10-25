@@ -2,6 +2,30 @@ import "./style.css";
 
 type Point = {x: number, y: number};
 
+class MarkerLine{
+    private points: {x: number, y: number }[] = [];
+
+    constructor(initialX: number, initialY: number){
+        this.points.push({x: initialX, y: initialY});
+    }
+
+    drag(x: number, y: number){
+        this.points.push({x, y});
+    }
+
+    display(ctx: CanvasRenderingContext2D){
+        if(this.points.length < 2) return;
+
+        ctx.beginPath();
+        ctx.moveTo(this.points[0].x, this.points[0].y);
+        for(const point of this.points){
+            ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+        ctx.closePath();
+    }
+}
+
 const APP_NAME = "Canvas Draw";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
@@ -18,9 +42,9 @@ const redoButton = document.getElementById("redo");
 
 
 let drawing = false;
-let strokes: Point[][] = [];
-let CurrentStroke: Point[] = [];
-let redoStack: Point[][] = [];
+let strokes: MarkerLine[] = [];
+let CurrentStroke: MarkerLine | null = null;
+let redoStack: MarkerLine[] = [];
 
 function setCanvasBG(){
     if(ctx){
@@ -39,15 +63,7 @@ function redraw(){
         ctx.lineWidth = 2;
 
         for(const stroke of strokes){
-            if(stroke.length > 0){
-                ctx.beginPath();
-                ctx.moveTo(stroke[0].x, stroke[0].y);
-                for(const point of stroke){
-                    ctx.lineTo(point.x, point.y);
-                }
-                ctx.stroke();
-                ctx.closePath();
-            }
+            stroke.display(ctx);
         }
     }
 }
@@ -59,22 +75,20 @@ function drawingChange(){
 
 function startDrawing(event: MouseEvent){
     drawing = true;
-    CurrentStroke = [];
-    const point: Point = {x: event.offsetX, y: event.offsetY};
-    CurrentStroke.push(point); 
+    CurrentStroke = new MarkerLine(event.offsetX, event.offsetY);
 }
 
 function draw(event: MouseEvent){
-    if(!drawing) return;
-    const point: Point = {x: event.offsetX, y: event.offsetY};
-    CurrentStroke.push(point);
-
-    drawingChange();
+    if(!drawing || !CurrentStroke) return;
+    CurrentStroke.drag(event.offsetX, event.offsetY);
+    drawingChange()
 }
 
 function stopDrawing(){
-    if(drawing){
+    if(drawing && CurrentStroke){
         strokes.push(CurrentStroke);
+        redoStack = [];
+        CurrentStroke = null;
         drawing = false;
     }
 }
