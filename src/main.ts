@@ -1,6 +1,8 @@
 import "./style.css";
 
-
+interface DrawableCommand{
+    display(ctx: CanvasRenderingContext2D): void;
+}
 
 
 const APP_NAME = "Canvas Draw";
@@ -17,16 +19,68 @@ const undoButton = document.getElementById("undo") as HTMLButtonElement;
 const redoButton = document.getElementById("redo") as HTMLButtonElement;
 const thinTool = document.getElementById('thin') as HTMLButtonElement;
 const thickTool = document.getElementById('thick') as HTMLButtonElement;
-
+const sticker1 = document.getElementById('sticker1') as HTMLButtonElement;
+const sticker2 = document.getElementById('sticker2') as HTMLButtonElement; 
+const sticker3 = document.getElementById('sticker3') as HTMLButtonElement;
 
 let drawing = false;
-let strokes: MarkerLine[] = [];
+let strokes: DrawableCommand[] = [];
 let CurrentStroke: MarkerLine | null = null;
-let redoStack: MarkerLine[] = [];
+let redoStack: DrawableCommand[] = [];
 let lineThickness = 2;
 let toolPrev: ToolPreview | null = null;
+let selectedSticker: string | null = null;
+let stickerPrev: StickerPreview | null = null; 
 
-class MarkerLine{
+class StickerPreview{
+    private x: number;
+    private y: number;
+    private sticker: string;
+
+    constructor(x: number, y: number, sticker: string){
+        this.x = x;
+        this.y = y;
+        this.sticker = sticker;
+    }
+
+    move(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    draw(ctx: CanvasRenderingContext2D){
+        ctx.font = '24px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.sticker, this.x, this.y);
+    }
+}
+
+class StickerPlacement implements DrawableCommand{
+    private x: number;
+    private y: number;
+    private sticker: string;
+
+    constructor(x: number, y: number, sticker: string){
+        this.x = x;
+        this.y = y;
+        this.sticker = sticker;
+    }
+
+    drag(x: number, y: number){
+        this.x = x;
+        this.y = y;
+    }
+
+    display(ctx: CanvasRenderingContext2D){
+        ctx.font = '24px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.sticker, this.x, this.y);
+    }
+}
+
+class MarkerLine implements DrawableCommand{
     private points: {x: number, y: number }[] = [];
     private thickness: number;
 
@@ -91,15 +145,16 @@ function redraw(){
         ctx.clearRect(0, 0, Canvas.width, Canvas.height);
         setCanvasBG();
 
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
-
         for(const stroke of strokes){
             stroke.display(ctx);
         }
 
         if(CurrentStroke){
             CurrentStroke.display(ctx);
+        }
+
+        if(stickerPrev && !drawing){
+            stickerPrev.draw(ctx);
         }
 
         if(toolPrev && !drawing){
@@ -179,6 +234,58 @@ function selectThick(){
     thinTool.classList.remove('selectedTool');
 }
 
+function selectSticker(sticker: string){
+    selectedSticker = sticker;
+
+    toolMoved();
+
+    toolPrev = null;
+    stickerPrev = new StickerPreview(0, 0, sticker);
+}
+
+function updateStickerPrev(event: MouseEvent){
+    if(stickerPrev){
+        stickerPrev.move(event.offsetX, event.offsetY);
+        redraw();
+    }
+}
+
+function placeSticker(event: MouseEvent){
+    if(selectedSticker){
+        const newSticker = new StickerPlacement(event.offsetX, event.offsetY, selectedSticker);
+        strokes.push(newSticker);
+        redraw();
+
+        if(stickerPrev){
+            stickerPrev.move(event.offsetX, event.offsetY);
+        }
+    }
+}
+
+sticker1.addEventListener('click', () => selectSticker("💩"));
+sticker2.addEventListener('click', () => selectSticker("😵‍💫"));
+sticker3.addEventListener('click', () => selectSticker("🖖🏻"));
+
+
+Canvas.addEventListener('mousemove', (event) => {
+    if (selectedSticker) {
+        updateStickerPrev(event);
+    } else {
+        updateToolPrev(event); // Use tool preview if no sticker is selected
+    }
+});
+
+Canvas.addEventListener('click', (event) => {
+    if (selectedSticker) {
+        placeSticker(event); // Place the sticker if a sticker is selected
+    }
+});
+
+Canvas.addEventListener('mouseout', () => {
+    toolPrev = null;
+    stickerPrev = null; // Hide sticker preview when the mouse leaves the canvas
+    redraw();
+});
 Canvas.addEventListener("mousedown", startDrawing);
 Canvas.addEventListener("mousemove", (event) => {
     draw(event);
