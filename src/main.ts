@@ -26,7 +26,7 @@ let drawing = false;
 let strokes: DrawableCommand[] = [];
 let CurrentStroke: MarkerLine | null = null;
 let redoStack: DrawableCommand[] = [];
-let lineThickness = 2;
+let lineThickness = 1.5;
 let toolPrev: ToolPreview | null = null;
 let selectedSticker: string | null = null;
 let stickerPrev: StickerPreview | null = null; 
@@ -258,13 +258,13 @@ function RedoStroke(){
 }
 
 function selectThin(){
-    lineThickness = 2;
+    lineThickness = 1.5;
     thinTool.classList.add('selectedTool');
     thickTool.classList.remove('selectedTool');
 }
 
 function selectThick(){
-    lineThickness = 5;
+    lineThickness = 4;
     thickTool.classList.add('selectedTool');
     thinTool.classList.remove('selectedTool');
 }

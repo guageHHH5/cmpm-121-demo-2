@@ -69,15 +69,15 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+  padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 2px solid #007BFF;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 5px;
 }
 
 .tool-button.selectedTool{
@@ -85,11 +85,64 @@ button {
   color: white;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: #0056b3;
+  border-color: #0056b3;
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+.tool-button {
+  font-weight: bold;
+  background-color: #007BFF;
+  border: 2px solid #007BFF;
+}
+
+.tool-button.selectedTool {
+  background-color: #FFD700;
+  color: #333;
+  border-color: #FFD700;
+  box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.3);
+}
+
+#clear, #undo, #redo, #export {
+  background-color: #28a745;
+  border: 2px solid #28a745;
+}
+
+#clear:hover, #undo:hover, #redo:hover, #export:hover {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+#button-container button {
+  font-size: 20px;
+  padding: 8px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  color: #333;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#button-container button:hover {
+  background-color: #e2e6ea;
+  border-color: #d1d3d4;
+}
+
+#button-container button:last-child {
+  font-size: 16px;
+  background-color: #ffc107;
+  color: #333;
+  border: 2px solid #ffc107;
+  padding: 8px 12px;
+  border-radius: 5px;
+}
+
+#button-container button:last-child:hover {
+  background-color: #e0a800;
+  border-color: #e0a800;
 }
 
 @media (prefers-color-scheme: light) {
