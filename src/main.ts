@@ -19,9 +19,7 @@ const undoButton = document.getElementById("undo") as HTMLButtonElement;
 const redoButton = document.getElementById("redo") as HTMLButtonElement;
 const thinTool = document.getElementById('thin') as HTMLButtonElement;
 const thickTool = document.getElementById('thick') as HTMLButtonElement;
-const sticker1 = document.getElementById('sticker1') as HTMLButtonElement;
-const sticker2 = document.getElementById('sticker2') as HTMLButtonElement; 
-const sticker3 = document.getElementById('sticker3') as HTMLButtonElement;
+const buttonContainer = document.getElementById('button-container') as HTMLDivElement;
 
 let drawing = false;
 let strokes: DrawableCommand[] = [];
@@ -31,6 +29,17 @@ let lineThickness = 2;
 let toolPrev: ToolPreview | null = null;
 let selectedSticker: string | null = null;
 let stickerPrev: StickerPreview | null = null; 
+
+interface Sticker{
+    id: string;
+    emoji: string;
+}
+
+let stickers: Sticker[] = [
+    {id: 'sticker1', emoji: '💩'},
+    {id: 'sticker2', emoji: '😵‍💫'},
+    {id: 'sticker3', emoji: '🖖🏻'}
+];
 
 class StickerPreview{
     private x: number;
@@ -234,6 +243,34 @@ function selectThick(){
     thinTool.classList.remove('selectedTool');
 }
 
+function renderStickerButtons(){
+    buttonContainer.innerHTML = '';
+
+    stickers.forEach((sticker)=>{
+        const button = document.createElement("button");
+        button.textContent = sticker.emoji;
+        button.addEventListener("click", ()=> selectSticker(sticker.emoji));
+        buttonContainer.appendChild(button);
+    });
+
+    const customSticker = document.createElement("button");
+    customSticker.textContent = "Add Custom Sticker";
+    customSticker.addEventListener("click", createCustomSticker);
+    buttonContainer.appendChild(customSticker);
+}
+
+function createCustomSticker(){
+    const customEmoji = prompt("Enter an emoji for your custom sticker:", "😊");
+    if (customEmoji) {
+        const customSticker: Sticker = {
+            id: `sticker${stickers.length + 1}`,
+            emoji: customEmoji
+        };
+        stickers.push(customSticker);
+        renderStickerButtons(); 
+    }
+}
+
 function selectSticker(sticker: string){
     selectedSticker = sticker;
 
@@ -262,10 +299,10 @@ function placeSticker(event: MouseEvent){
     }
 }
 
-sticker1.addEventListener('click', () => selectSticker("💩"));
-sticker2.addEventListener('click', () => selectSticker("😵‍💫"));
-sticker3.addEventListener('click', () => selectSticker("🖖🏻"));
-
+document.addEventListener('DOMContentLoaded', ()=>{
+    renderStickerButtons();
+    setCanvasBG();
+})
 
 Canvas.addEventListener('mousemove', (event) => {
     if (selectedSticker) {
