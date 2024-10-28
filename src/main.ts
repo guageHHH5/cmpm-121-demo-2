@@ -20,6 +20,7 @@ const redoButton = document.getElementById("redo") as HTMLButtonElement;
 const thinTool = document.getElementById('thin') as HTMLButtonElement;
 const thickTool = document.getElementById('thick') as HTMLButtonElement;
 const buttonContainer = document.getElementById('button-container') as HTMLDivElement;
+const ExportButton = document.getElementById("export") as HTMLButtonElement;
 
 let drawing = false;
 let strokes: DrawableCommand[] = [];
@@ -148,6 +149,31 @@ function setCanvasBG(){
     }
     
 };
+
+function exportCanvasAsPNG(){
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 1024;
+    exportCanvas.height = 1024;
+    const exportCtx = exportCanvas.getContext("2d");
+    if(exportCtx){
+        exportCtx.scale(4,4);
+        exportCtx.fillStyle = "#ffffff";
+        exportCtx.fillRect(0, 0, Canvas.width, Canvas.height);
+        strokes.forEach(stroke => stroke.display(exportCtx));
+    }
+    exportCanvas.toBlob((blob) => {
+        if(blob){
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "canvas_export.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    }, "image/png");
+}
 
 function redraw(){
     if(ctx){
@@ -349,6 +375,7 @@ clearButton?.addEventListener("click", ()=>{
 
 thinTool.addEventListener('click', selectThin);
 thickTool.addEventListener('click', selectThick);
+ExportButton.addEventListener('click', exportCanvasAsPNG);
 
 setCanvasBG();
 
