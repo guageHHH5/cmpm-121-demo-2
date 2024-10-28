@@ -30,6 +30,8 @@ let lineThickness = 1.5;
 let toolPrev: ToolPreview | null = null;
 let selectedSticker: string | null = null;
 let stickerPrev: StickerPreview | null = null; 
+let linecolor = getRandomColor();
+let stickerRotation = getRandomRotation();
 
 interface Sticker{
     id: string;
@@ -46,11 +48,13 @@ class StickerPreview{
     private x: number;
     private y: number;
     private sticker: string;
+    private rotation: number;
 
-    constructor(x: number, y: number, sticker: string){
+    constructor(x: number, y: number, sticker: string, rotation: number){
         this.x = x;
         this.y = y;
         this.sticker = sticker;
+        this.rotation = rotation;
     }
 
     move(x: number, y: number) {
@@ -58,11 +62,19 @@ class StickerPreview{
         this.y = y;
     }
 
+    setRotation(rotation: number){
+        this.rotation = rotation;
+    }
+
     draw(ctx: CanvasRenderingContext2D){
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180);
         ctx.font = '24px serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this.sticker, this.x, this.y);
+        ctx.fillText(this.sticker, 0, 0);
+        ctx.restore();
     }
 }
 
@@ -70,11 +82,13 @@ class StickerPlacement implements DrawableCommand{
     private x: number;
     private y: number;
     private sticker: string;
+    private rotation: number;
 
-    constructor(x: number, y: number, sticker: string){
+    constructor(x: number, y: number, sticker: string, rotation: number){
         this.x = x;
         this.y = y;
         this.sticker = sticker;
+        this.rotation = rotation;
     }
 
     drag(x: number, y: number){
@@ -82,21 +96,30 @@ class StickerPlacement implements DrawableCommand{
         this.y = y;
     }
 
+
     display(ctx: CanvasRenderingContext2D){
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.rotation * Math.PI) / 180); // Convert rotation to radians
         ctx.font = '24px serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(this.sticker, this.x, this.y);
+        ctx.fillText(this.sticker, 0, 0);
+        ctx.restore();
+
     }
 }
 
 class MarkerLine implements DrawableCommand{
     private points: {x: number, y: number }[] = [];
     private thickness: number;
+    private color: string;
 
-    constructor(initialX: number, initialY: number, thickness: number){
+    constructor(initialX: number, initialY: number, thickness: number, color: string){
         this.points.push({x: initialX, y: initialY});
         this.thickness = thickness;
+        this.color = color;
     }
 
     drag(x: number, y: number){
@@ -107,6 +130,7 @@ class MarkerLine implements DrawableCommand{
         if(this.points.length < 2) return;
 
         ctx.lineWidth = this.thickness;
+        ctx.strokeStyle = this.color;
         ctx.beginPath();
         ctx.moveTo(this.points[0].x, this.points[0].y);
         for(const point of this.points){
@@ -121,16 +145,26 @@ class ToolPreview{
     private x: number;
     private y: number;
     private thickness: number;
+    private color: string;
 
-    constructor(x: number, y: number, thickness: number){
+    constructor(x: number, y: number, thickness: number, color: string){
         this.x = x;
         this.y = y;
         this.thickness = thickness;
+        this.color = color;
     }
 
     move(x: number, y: number){
         this.x = x;
         this.y = y;
+    }
+
+    setThickness(thickness: number){
+        this.thickness = thickness;
+    }
+
+    setColor(color: string){
+        this.color = color;
     }
 
     draw(ctx: CanvasRenderingContext2D){
@@ -149,6 +183,19 @@ function setCanvasBG(){
     }
     
 };
+
+function getRandomColor(): string{
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for(let i = 0; i < 6; i++){
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+function getRandomRotation(): number {
+    return Math.floor(Math.random() * 360);
+}
 
 function exportCanvasAsPNG(){
     const exportCanvas = document.createElement("canvas");
@@ -210,7 +257,7 @@ function toolMoved(){
 
 function startDrawing(event: MouseEvent){
     drawing = true;
-    CurrentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness);
+    CurrentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness, linecolor);
 }
 
 function draw(event: MouseEvent){
@@ -230,9 +277,11 @@ function stopDrawing(){
 
 function updateToolPrev(event: MouseEvent){
     if(!toolPrev){
-        toolPrev = new ToolPreview(event.offsetX, event.offsetY, lineThickness);
+        toolPrev = new ToolPreview(event.offsetX, event.offsetY, lineThickness, linecolor);
     } else {
         toolPrev.move(event.offsetX, event.offsetY);
+        toolPrev.setThickness(lineThickness);
+        toolPrev.setColor(linecolor);
     }
     toolMoved();
 }
@@ -259,14 +308,24 @@ function RedoStroke(){
 
 function selectThin(){
     lineThickness = 1.5;
+    linecolor = getRandomColor();
     thinTool.classList.add('selectedTool');
     thickTool.classList.remove('selectedTool');
+    if(toolPrev){
+        toolPrev.setThickness(lineThickness);
+        toolPrev.setColor(linecolor);
+    }
 }
 
 function selectThick(){
     lineThickness = 4;
+    linecolor = getRandomColor();
     thickTool.classList.add('selectedTool');
     thinTool.classList.remove('selectedTool');
+    if(toolPrev){
+        toolPrev.setThickness(lineThickness);
+        toolPrev.setColor(linecolor);
+    }
 }
 
 function renderStickerButtons(){
@@ -299,23 +358,24 @@ function createCustomSticker(){
 
 function selectSticker(sticker: string){
     selectedSticker = sticker;
-
+    stickerRotation = getRandomRotation();
     toolMoved();
 
     toolPrev = null;
-    stickerPrev = new StickerPreview(0, 0, sticker);
+    stickerPrev = new StickerPreview(0, 0, sticker, stickerRotation);
 }
 
 function updateStickerPrev(event: MouseEvent){
     if(stickerPrev){
         stickerPrev.move(event.offsetX, event.offsetY);
+        stickerPrev.setRotation(stickerRotation);
         redraw();
     }
 }
 
 function placeSticker(event: MouseEvent){
     if(selectedSticker){
-        const newSticker = new StickerPlacement(event.offsetX, event.offsetY, selectedSticker);
+        const newSticker = new StickerPlacement(event.offsetX, event.offsetY, selectedSticker, stickerRotation);
         strokes.push(newSticker);
         redraw();
 
