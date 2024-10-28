@@ -6,19 +6,28 @@
   </head>
   <body>
     <div id="app"></div>
-    <canvas id="myCanvas" width="256" height="256"></canvas>
 
-    <!-- Tool Buttons -->
-    <button id="thin" class="tool-button">Thin</button>
-    <button id="thick" class="tool-button">Thick</button>
+    <div class="canvas-container">
+      <canvas id="myCanvas" width="256" height="256"></canvas>
+    </div>
 
-    <!-- Action Buttons -->
-    <button id="clear">Clear</button>
-    <button id="undo">Undo</button>
-    <button id="redo">Redo</button>
-    <button id="export">Export</button>
+    <div class="controls-container">
+      <!-- Tool Buttons -->
+      <div class="tool-buttons">
+        <button id="thin" class="tool-button">Thin</button>
+        <button id="thick" class="tool-button">Thick</button>
+      </div>
 
-    <div id="button-container"></div>
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button id="clear">Clear</button>
+        <button id="undo">Undo</button>
+        <button id="redo">Redo</button>
+        <button id="export">Export</button>
+      </div>
+        
+      <div id="button-container"></div>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

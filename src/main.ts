@@ -5,7 +5,7 @@ interface DrawableCommand{
 }
 
 
-const APP_NAME = "Canvas Draw";
+const APP_NAME = "Sketch Pad";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 const Header = document.createElement("h1");
