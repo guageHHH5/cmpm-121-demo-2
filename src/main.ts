@@ -257,6 +257,9 @@ function toolMoved(){
 
 function startDrawing(event: MouseEvent){
     drawing = true;
+    if(selectedSticker){
+        return
+    }
     CurrentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness, linecolor);
 }
 
@@ -307,6 +310,10 @@ function RedoStroke(){
 }
 
 function selectThin(){
+    if(selectedSticker) {
+        selectedSticker = null;
+        stickerPrev = null;
+    }
     lineThickness = 1.5;
     linecolor = getRandomColor();
     thinTool.classList.add('selectedTool');
@@ -318,6 +325,10 @@ function selectThin(){
 }
 
 function selectThick(){
+    if(selectedSticker) {
+        selectedSticker = null;
+        stickerPrev = null;
+    }
     lineThickness = 4;
     linecolor = getRandomColor();
     thickTool.classList.add('selectedTool');
@@ -362,6 +373,7 @@ function selectSticker(sticker: string){
     toolMoved();
 
     toolPrev = null;
+    CurrentStroke = null;
     stickerPrev = new StickerPreview(0, 0, sticker, stickerRotation);
 }
 
