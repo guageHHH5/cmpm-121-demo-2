@@ -6,25 +6,29 @@ interface DrawableCommand{
 
 
 const APP_NAME = "Sketch Pad";
+document.title = APP_NAME;
+
 const app = document.querySelector<HTMLDivElement>("#app")!;
+app.innerHTML = APP_NAME;
 
 const Header = document.createElement("h1");
 Header.innerHTML = APP_NAME;
+Header.style.fontSize = "24px"
 app.append(Header);
 
-const Canvas = document.getElementById ("myCanvas") as HTMLCanvasElement;
-const ctx = Canvas.getContext("2d");
+const canvas = document.getElementById ("myCanvas") as HTMLCanvasElement;
+const ctx = canvas.getContext("2d");
 const clearButton = document.getElementById("clear") as HTMLButtonElement;
 const undoButton = document.getElementById("undo") as HTMLButtonElement;
 const redoButton = document.getElementById("redo") as HTMLButtonElement;
 const thinTool = document.getElementById('thin') as HTMLButtonElement;
 const thickTool = document.getElementById('thick') as HTMLButtonElement;
 const buttonContainer = document.getElementById('button-container') as HTMLDivElement;
-const ExportButton = document.getElementById("export") as HTMLButtonElement;
+const exportButton = document.getElementById("export") as HTMLButtonElement;
 
 let drawing = false;
 let strokes: DrawableCommand[] = [];
-let CurrentStroke: MarkerLine | null = null;
+let currentStroke: MarkerLine | null = null;
 let redoStack: DrawableCommand[] = [];
 let lineThickness = 1.5;
 let toolPrev: ToolPreview | null = null;
@@ -38,7 +42,7 @@ interface Sticker{
     emoji: string;
 }
 
-let stickers: Sticker[] = [
+const stickers: Sticker[] = [
     {id: 'sticker1', emoji: '💩'},
     {id: 'sticker2', emoji: '😵‍💫'},
     {id: 'sticker3', emoji: '🖖🏻'}
@@ -103,6 +107,7 @@ class StickerPlacement implements DrawableCommand{
         ctx.translate(this.x, this.y);
         ctx.rotate((this.rotation * Math.PI) / 180); // Convert rotation to radians
         ctx.font = '24px serif';
+        ctx.strokeStyle = 'rgba(0, 0, 0, 1)'
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.sticker, 0, 0);
@@ -181,7 +186,6 @@ function setCanvasBG(){
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, 256, 256);
     }
-    
 };
 
 function getRandomColor(): string{
@@ -205,7 +209,7 @@ function exportCanvasAsPNG(){
     if(exportCtx){
         exportCtx.scale(4,4);
         exportCtx.fillStyle = "#ffffff";
-        exportCtx.fillRect(0, 0, Canvas.width, Canvas.height);
+        exportCtx.fillRect(0, 0, canvas.width, canvas.height);
         strokes.forEach(stroke => stroke.display(exportCtx));
     }
     exportCanvas.toBlob((blob) => {
@@ -224,15 +228,15 @@ function exportCanvasAsPNG(){
 
 function redraw(){
     if(ctx){
-        ctx.clearRect(0, 0, Canvas.width, Canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         setCanvasBG();
 
         for(const stroke of strokes){
             stroke.display(ctx);
         }
 
-        if(CurrentStroke){
-            CurrentStroke.display(ctx);
+        if(currentStroke){
+            currentStroke.display(ctx);
         }
 
         if(stickerPrev && !drawing){
@@ -247,30 +251,30 @@ function redraw(){
 
 function drawingChange(){
     const event = new Event("drawing-changed");
-    Canvas.dispatchEvent(event);
+    canvas.dispatchEvent(event);
 }
 
 function toolMoved(){
     const event = new Event('tool-moved');
-    Canvas.dispatchEvent(event);
+    canvas.dispatchEvent(event);
 }
 
 function startDrawing(event: MouseEvent){
     drawing = true;
-    CurrentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness, linecolor);
+    currentStroke = new MarkerLine(event.offsetX, event.offsetY, lineThickness, linecolor);
 }
 
 function draw(event: MouseEvent){
-    if(!drawing || !CurrentStroke) return;
-    CurrentStroke.drag(event.offsetX, event.offsetY);
+    if(!drawing || !currentStroke) return;
+    currentStroke.drag(event.offsetX, event.offsetY);
     drawingChange()
 }
 
 function stopDrawing(){
-    if(drawing && CurrentStroke){
-        strokes.push(CurrentStroke);
+    if(drawing && currentStroke){
+        strokes.push(currentStroke);
         redoStack = [];
-        CurrentStroke = null;
+        currentStroke = null;
         drawing = false;
     }
 }
@@ -390,7 +394,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     setCanvasBG();
 })
 
-Canvas.addEventListener('mousemove', (event) => {
+canvas.addEventListener('mousemove', (event) => {
     if (selectedSticker) {
         updateStickerPrev(event);
     } else {
@@ -398,29 +402,29 @@ Canvas.addEventListener('mousemove', (event) => {
     }
 });
 
-Canvas.addEventListener('click', (event) => {
+canvas.addEventListener('click', (event) => {
     if (selectedSticker) {
         placeSticker(event); // Place the sticker if a sticker is selected
     }
 });
 
-Canvas.addEventListener('mouseout', () => {
+canvas.addEventListener('mouseout', () => {
     toolPrev = null;
     stickerPrev = null; // Hide sticker preview when the mouse leaves the canvas
     redraw();
 });
-Canvas.addEventListener("mousedown", startDrawing);
-Canvas.addEventListener("mousemove", (event) => {
+canvas.addEventListener("mousedown", startDrawing);
+canvas.addEventListener("mousemove", (event) => {
     draw(event);
     updateToolPrev(event);
 });
-Canvas.addEventListener("mouseup", stopDrawing);
-Canvas.addEventListener("mouseout", ()=>{
+canvas.addEventListener("mouseup", stopDrawing);
+canvas.addEventListener("mouseout", ()=>{
     toolPrev = null;
     drawingChange();
 });
 
-Canvas.addEventListener("drawing-changed", redraw);
+canvas.addEventListener("drawing-changed", redraw);
 
 undoButton?.addEventListener('click', UndoStroke);
 redoButton?.addEventListener('click', RedoStroke);
@@ -428,17 +432,13 @@ redoButton?.addEventListener('click', RedoStroke);
 clearButton?.addEventListener("click", ()=>{
     strokes = [];
     if(ctx){
-        ctx.clearRect(0, 0, Canvas.width, Canvas.height);
+        ctx.clearRect(0, 0,canvas.width, canvas.height);
         setCanvasBG();
     }
 });
 
 thinTool.addEventListener('click', selectThin);
 thickTool.addEventListener('click', selectThick);
-ExportButton.addEventListener('click', exportCanvasAsPNG);
+exportButton.addEventListener('click', exportCanvasAsPNG);
 
 setCanvasBG();
-
-document.title = APP_NAME;
-app.innerHTML = APP_NAME;
-
